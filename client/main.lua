@@ -139,12 +139,15 @@ local function deleteNpc(npc)
     npc.ped = nil
 end
 
+-- Le coordinate prese col giocatore sono circa un metro sopra il terreno.
+local NPC_GROUND_OFFSET = 1.0
+
 local function spawnNpc(npc, config)
     local hash = Delivery.LoadModel(config.Model)
     if not hash then return end
 
     local coords = config.Coords
-    local ped = CreatePed(hash, coords.x, coords.y, coords.z, coords.w, false, false, false, false)
+    local ped = CreatePed(hash, coords.x, coords.y, coords.z - NPC_GROUND_OFFSET, coords.w, false, false, false, false)
     SetModelAsNoLongerNeeded(hash)
     if not ped or ped == 0 then return end
 
@@ -152,6 +155,7 @@ local function spawnNpc(npc, config)
     SetEntityInvincible(ped, true)
     SetEntityCanBeDamaged(ped, false)
     SetBlockingOfNonTemporaryEvents(ped, true)
+    PlaceEntityOnGroundProperly(ped, true)
     FreezeEntityPosition(ped, true)
 
     if config.Scenario and config.Scenario ~= '' then

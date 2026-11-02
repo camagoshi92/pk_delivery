@@ -160,16 +160,16 @@ Config.Sweeper = {
 Config.Crates = {
     Enabled = true,
 
-    Locations = { -- COORDINATE DI ESEMPIO: da sostituire. Tutte le casse si prendono da PickupPoint.
+    Locations = { -- 
         valentine = {
             Npc = {
                 Model = 'a_m_m_valfarmer_01',
-                Coords = vector4(-324.6, 803.9, 116.9, 280.0), -- davanti all'emporio, da verificare
+                Coords = vector4(-1795.89, -385.15, 160.33, 276.24),
                 Scenario = 'WORLD_HUMAN_CLIPBOARD',
                 Blip = { Enabled = true, Sprite = 'blip_shop_store' },
             },
-            PickupPoint = vector4(-170.0, 640.0, 113.6, 0.0),
-            DeliveryPoint = vector3(-322.5, 803.0, 116.9),
+            PickupPoint = vector4(-1761.85, -394.43, 156.27, 281.35),
+            DeliveryPoint = vector4(-1791.43, -384.62, 160.33, 49.02),
         },
 
         rhodes = {
@@ -230,15 +230,15 @@ Config.Crates = {
 Config.Wagon = {
     Enabled = true,
 
-    Locations = { -- COORDINATE DI ESEMPIO: da sostituire. Il nome di ogni Key sta in locales.lua.
+    Locations = {
         valentine = {
             Npc = {
                 Model = 'a_m_m_valfarmer_01',
-                Coords = vector4(-250.0, 750.0, 117.0, 200.0),
+                Coords = vector4(-1768.09, -425.57, 155.21, 145.59),
                 Scenario = 'WORLD_HUMAN_SMOKE',
                 Blip = { Enabled = true, Sprite = 'blip_teamsters' },
             },
-            SpawnPoint = vector4(-246.0, 745.0, 117.0, 200.0), -- accanto all'NPC
+            SpawnPoint = vector4(-1775.56, -428.89, 154.65, 145.97),
             Destinations = {
                 { Key = 'emerald', Coords = vector4(1420.0, 280.0, 89.5, 0.0) },
                 { Key = 'rhodes', Coords = vector4(1290.0, -1280.0, 77.0, 0.0) },
