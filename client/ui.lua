@@ -1,4 +1,4 @@
--- Unico punto del lato client che chiama pk_library. Se cambiano gli export si corregge qui.
+-- The only client-side place that calls pk_library. If the exports change, fix them here.
 UI = {}
 
 function UI.Notify(notificationType, message, title)
@@ -18,7 +18,7 @@ function UI.IsDialogOpen()
     return exports.pk_library:IsDialogOpen()
 end
 
--- Bloccante: restituisce true se completata, false se interrotta con UI.CancelProgress.
+-- Blocking: returns true when completed, false when stopped with UI.CancelProgress.
 function UI.Progress(label, seconds)
     return exports.pk_library:Progress({
         label = label,

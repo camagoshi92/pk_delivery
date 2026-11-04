@@ -5,8 +5,8 @@ lua54 'yes'
 
 name 'pk_delivery'
 author 'Poker Studio'
-description 'Lavori cittadini: spazzino, consegna casse all emporio, trasporto viveri con carretto'
-version '1.0.0'
+description 'City jobs: street sweeper, general store crate delivery, wagon supply run'
+version '1.0.1'
 
 dependencies {
     'pk_library',
@@ -20,7 +20,7 @@ shared_scripts {
 }
 
 server_scripts {
-    '@oxmysql/lib/MySQL.lua', -- usato solo per leggere la fazione in server/bridge.lua
+    '@oxmysql/lib/MySQL.lua', -- only used to read the faction in server/bridge.lua
     'server/bridge.lua',
     'server/ui.lua',
     'server/access.lua',

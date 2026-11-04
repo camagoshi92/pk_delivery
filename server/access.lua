@@ -1,9 +1,9 @@
--- Chi puo accettare un lavoro in un punto. Il controllo e solo lato server.
+-- Who can accept a job at a location. The check is server-side only.
 --
 -- Access = {
---     Jobs = { 'nome_job', { Job = 'nome_job', MinGrade = 2 } },
---     Factions = { 'Nome Fazione' },   -- true = qualunque fazione assegnata
---     Mode = 'any',                    -- 'any': job O fazione; 'all': job E fazione
+--     Jobs = { 'job_name', { Job = 'job_name', MinGrade = 2 } },
+--     Factions = { 'Faction Name' },   -- true = any assigned faction
+--     Mode = 'any',                    -- 'any': job OR faction; 'all': job AND faction
 -- }
 local function normalize(value)
     return tostring(value or ''):lower():match('^%s*(.-)%s*$')

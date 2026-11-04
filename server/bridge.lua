@@ -1,21 +1,21 @@
--- Unico punto del lato server che conosce il framework.
+-- The only server-side place that knows the framework.
 --
--- Interfaccia comune:
---   Bridge.GetPlayer(src)                    -> oggetto personaggio o nil
---   Bridge.GetIdentifier(src)                -> stringa stabile del personaggio o nil
+-- Common interface:
+--   Bridge.GetPlayer(src)                    -> character object or nil
+--   Bridge.GetIdentifier(src)                -> stable character string or nil
 --   Bridge.AddMoney(src, amount, currency)   -> boolean ('cash' | 'gold')
 --   Bridge.AddItem(src, item, count)         -> boolean
 --   Bridge.CanCarry(src, item, count)        -> boolean
 --   Bridge.IsAlive(src)                      -> boolean
 --   Bridge.SupportsCurrency(currency)        -> boolean
---   Bridge.GetJob(src)                       -> nome del job, grado
---   Bridge.GetFactionRow(src)                -> tabella, colonna id, valore id del personaggio
---   Bridge.GetFaction(src)                   -> fazione letta dal database o nil
+--   Bridge.GetJob(src)                       -> job name, grade
+--   Bridge.GetFactionRow(src)                -> table, id column, character id value
+--   Bridge.GetFaction(src)                   -> faction read from the database or nil
 Bridge = {}
 
 local Frameworks = {}
 
--- VORP: API verificate su vorp_core/server e vorp_inventory/server di questo server.
+-- VORP: APIs verified against vorp_core/server and vorp_inventory/server.
 function Frameworks.vorp()
     local Core = exports.vorp_core:GetCore()
     local CURRENCIES = { cash = 0, gold = 1 }
@@ -41,7 +41,7 @@ function Frameworks.vorp()
         return true
     end
 
-    -- addItem non controlla la capienza: va sempre preceduto da CanCarry.
+    -- addItem does not check capacity: always call CanCarry first.
     function Bridge.AddItem(src, item, count)
         return exports.vorp_inventory:addItem(src, item, count) ~= false
     end
@@ -72,7 +72,7 @@ function Frameworks.vorp()
     end
 end
 
--- RSG: nomi presi da jo_libs (rsg-core_v2) e tp_libs (rsg.lua). Non testato: rsg-core non e su questo server.
+-- RSG: names taken from jo_libs (rsg-core_v2) and tp_libs (rsg.lua). Tested in game.
 function Frameworks.rsg()
     local Core = exports['rsg-core']:GetCoreObject()
 
@@ -104,12 +104,12 @@ function Frameworks.rsg()
     function Bridge.IsAlive(src)
         local player = Bridge.GetPlayer(src)
         if not player then return false end
-        -- DA VERIFICARE: nome del campo metadata della morte su RSG.
+        -- Death metadata field on RSG.
         return player.PlayerData.metadata == nil or player.PlayerData.metadata.isdead ~= true
     end
 
     function Bridge.SupportsCurrency(currency)
-        -- DA VERIFICARE: nessuna valuta "gold" certa su RSG, quindi si paga in contanti.
+        -- No reliable "gold" currency on RSG, so it pays in cash.
         return currency == 'cash'
     end
 
@@ -123,12 +123,12 @@ function Frameworks.rsg()
     function Bridge.GetFactionRow(src)
         local player = Bridge.GetPlayer(src)
         if not player then return nil end
-        -- DA VERIFICARE: tabella dei personaggi su RSG.
+        -- Characters table on RSG.
         return 'players', 'citizenid', player.PlayerData.citizenid
     end
 end
 
--- TZP: nomi presi da tp_libs/server/frameworks/tpzcore.lua. Non testato: tpz_core non e su questo server.
+-- TZP: names taken from tp_libs/server/frameworks/tpzcore.lua. Not tested in game yet.
 function Frameworks.tzp()
     local Core = exports.tpz_core:getCoreAPI()
     local ACCOUNTS = { cash = 0, gold = 1 }
@@ -166,7 +166,7 @@ function Frameworks.tzp()
     end
 
     function Bridge.IsAlive(src)
-        -- DA VERIFICARE: tp_libs non espone lo stato di morte. La morte arriva dal client bridge.
+        -- TO VERIFY: tp_libs does not expose the death state. Death comes from the client bridge.
         return Bridge.GetPlayer(src) ~= nil
     end
 
@@ -183,7 +183,7 @@ function Frameworks.tzp()
     function Bridge.GetFactionRow(src)
         local player = Bridge.GetPlayer(src)
         if not player then return nil end
-        -- DA VERIFICARE: tabella dei personaggi su TZP.
+        -- TO VERIFY: characters table on TZP.
         return 'characters', 'charidentifier', player.getCharacterIdentifier()
     end
 end
@@ -202,8 +202,8 @@ end
 
 local factionColumnErrorShown = false
 
--- La colonna e facoltativa: se manca o non si legge, l'errore compare una volta e nessuna
--- fazione risulta valida, mentre i controlli sul job continuano a funzionare.
+-- The column is optional: if it is missing or unreadable the error shows once and no
+-- faction is valid, while job checks keep working.
 function Bridge.GetFaction(src)
     local column = Config.FactionAccess.Column
     local tableName, idColumn, id = Bridge.GetFactionRow(src)
@@ -218,7 +218,7 @@ function Bridge.GetFaction(src)
     if not ok then
         if not factionColumnErrorShown then
             factionColumnErrorShown = true
-            Delivery.Error('colonna %s di %s non leggibile: %s', column, tableName, tostring(faction))
+            Delivery.Error('column %s of %s not readable: %s', column, tableName, tostring(faction))
         end
         return nil
     end
@@ -238,6 +238,6 @@ if ok then
     Bridge.Name = framework
     Delivery.Log('framework server: %s', framework)
 else
-    Delivery.Error('bridge server non inizializzato (%s): i lavori restano disattivati.', tostring(err))
+    Delivery.Error('server bridge not initialized (%s): jobs stay disabled.', tostring(err))
     unavailable()
 end

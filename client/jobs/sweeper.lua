@@ -1,4 +1,4 @@
--- Lavoro 1: punti da pulire uno alla volta, con scenario o scopa in mano e barra di avanzamento.
+-- Job 1: points cleaned one at a time, with a scenario or a broom in hand and a progress bar.
 local Cfg = Config.Sweeper
 local Texts = Cfg.Texts
 
@@ -54,7 +54,7 @@ local function stopWorkAnimation(ped)
     end
 end
 
--- Finche la barra avanza: tasto di interruzione, spostamento o morte la fermano.
+-- While the bar runs: the interrupt key, moving away or dying stop it.
 local function watchInterrupt(token, ped, isDone)
     CreateThread(function()
         local startCoords = GetEntityCoords(ped)

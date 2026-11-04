@@ -1,12 +1,12 @@
--- Tutti i testi della risorsa. La lingua si sceglie con Config.Locale.
--- Per aggiungere una lingua copia un blocco, cambia la chiave e traduci i valori:
--- le voci mancanti restano in italiano.
+-- All texts of the resource. The language is chosen with Config.Locale.
+-- To add a language copy a block, change its key and translate the values:
+-- missing entries stay in Italian.
 --
--- Common finisce in Config.Texts; ogni voce di Jobs si fonde col lavoro omonimo di Config.Jobs,
--- quindi ha la stessa struttura (Dialog, Texts, nomi dei blip).
--- Npc vale per tutte le citta del lavoro. Locations.<citta> sovrascrive una sola citta e puo
--- contenere Npc e Dialog: una citta nuova funziona anche senza voci qui.
--- Texts.Destinations del carretto usa le Key delle Destinations in config.lua.
+-- Common goes into Config.Texts; every Jobs entry is merged into the Config.Jobs job with the same name,
+-- so it has the same structure (Dialog, Texts, blip names).
+-- Npc applies to all towns of the job. Locations.<town> overrides a single town and can
+-- hold Npc and Dialog: a new town works even without entries here.
+-- The wagon's Texts.Destinations uses the Destinations Keys in config.lua.
 Locales = {}
 
 Locales.it = {
@@ -271,8 +271,8 @@ Locales.en = {
     },
 }
 
--- Le liste (come le battute dei dialoghi) si sostituiscono intere: una traduzione
--- piu corta non deve lasciare righe in un'altra lingua.
+-- Lists (like dialog lines) are replaced whole: a shorter translation
+-- must not leave lines in another language.
 local function merge(target, source)
     for key, value in pairs(source) do
         if type(value) == 'table' and value[1] == nil and type(target[key]) == 'table' then
@@ -283,7 +283,7 @@ local function merge(target, source)
     end
 end
 
--- Solo le citta presenti in config.lua: quelle tolte dal config non devono ricomparire da qui.
+-- Only towns present in config.lua: towns removed from the config must not come back from here.
 local function applyJob(job, texts)
     local locationTexts = texts.Locations or {}
 
@@ -316,6 +316,6 @@ if Config.Locale ~= 'it' then
     if Locales[Config.Locale] then
         applyLocale(Locales[Config.Locale])
     else
-        print(('^3[%s] Lingua %s non trovata: uso l\'italiano.^7'):format(GetCurrentResourceName(), tostring(Config.Locale)))
+        print(('^3[%s] Language %s not found: using Italian.^7'):format(GetCurrentResourceName(), tostring(Config.Locale)))
     end
 end

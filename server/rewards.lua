@@ -1,4 +1,4 @@
--- Calcolo e consegna delle ricompense. Tutto deciso qui: il client non invia mai importi.
+-- Reward calculation and delivery. Everything is decided here: the client never sends amounts.
 local Texts = Config.Texts
 
 local function roundMoney(value)
@@ -68,7 +68,7 @@ local function giveItems(src, reward, lines)
     end
 end
 
--- options = { elapsed = secondi per il bonus tempo, multiplier = quota del carico rimasta }
+-- options = { elapsed = seconds for the time bonus, multiplier = share of cargo left }
 function Delivery.GiveReward(src, reward, label, options)
     reward = reward or {}
     local mode = reward.Mode or 'money'

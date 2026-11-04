@@ -1,4 +1,4 @@
--- Funzioni comuni a client e server.
+-- Functions shared by client and server.
 Delivery = {
     Jobs = {},
     Hooks = {},
@@ -6,8 +6,8 @@ Delivery = {
 
 local RESOURCE_NAME = GetCurrentResourceName()
 
--- Le chiavi sono i valori di Config.Framework, le liste i nomi delle risorse da cercare.
--- 'tzp-core' e il nome richiesto; la risorsa pubblicata si chiama tpz_core (vedi tp_libs).
+-- Keys are the Config.Framework values, lists are the resource names to look for.
+-- The TPZ resource is published as tpz_core; 'tzp-core' is accepted too.
 local FRAMEWORK_RESOURCES = {
     { name = 'vorp', resources = { 'vorp_core' } },
     { name = 'rsg', resources = { 'rsg-core' } },
@@ -25,7 +25,7 @@ function Delivery.Warn(message, ...)
 end
 
 function Delivery.Error(message, ...)
-    print(('^1[%s] ERRORE: %s^7'):format(RESOURCE_NAME, message:format(...)))
+    print(('^1[%s] ERROR: %s^7'):format(RESOURCE_NAME, message:format(...)))
 end
 
 local function isStarted(resources)
@@ -53,7 +53,7 @@ function Delivery.DetectFramework()
     return nil
 end
 
--- Dati di una citta del lavoro, oppure nil se non esiste o e spenta.
+-- Data of a job's town, or nil if it does not exist or is disabled.
 function Delivery.GetLocation(jobId, locationId)
     local config = Config.Jobs[jobId]
     local place = config and config.Locations[locationId]
@@ -63,7 +63,7 @@ function Delivery.GetLocation(jobId, locationId)
     return place
 end
 
--- Formatta un tempo in secondi per i testi: 90 -> "1m 30s".
+-- Formats a time in seconds for texts: 90 -> "1m 30s".
 function Delivery.FormatTime(seconds)
     seconds = math.max(0, math.floor(seconds))
     local minutes = math.floor(seconds / 60)
@@ -76,7 +76,7 @@ function Delivery.FormatTime(seconds)
     return ('%dm %ds'):format(minutes, seconds % 60)
 end
 
--- Punti di estensione: Delivery.On('wagon:tick', function(session) ... end)
+-- Extension points: Delivery.On('wagon:tick', function(session) ... end)
 function Delivery.On(name, callback)
     Delivery.Hooks[name] = Delivery.Hooks[name] or {}
     table.insert(Delivery.Hooks[name], callback)

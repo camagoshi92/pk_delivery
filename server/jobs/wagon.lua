@@ -1,12 +1,12 @@
--- Lavoro 3: trasporto con carretto. Il server cronometra e controlla il mezzo.
+-- Job 3: wagon transport. The server times the trip and checks the vehicle.
 --
--- Punti di estensione per il furto del carico (Config.Robbery), non implementato:
---   Delivery.On('wagon:departed', function(session) end)   giocatore a cassetta, tempo avviato
---   Delivery.On('wagon:tick', function(session) end)       ogni secondo durante il viaggio
---   Delivery.On('wagon:delivered', function(session) end)  prima del pagamento
+-- Extension points for cargo robbery (Config.Robbery), not implemented:
+--   Delivery.On('wagon:departed', function(session) end)   player on the seat, timer started
+--   Delivery.On('wagon:tick', function(session) end)       every second during the trip
+--   Delivery.On('wagon:delivered', function(session) end)  before the payment
 --   Delivery.On('wagon:ended', function(session, outcome) end)
--- session.cargo (da 0.0 a 1.0) e la quota di carico rimasta e moltiplica la paga:
--- una perdita parziale si ottiene abbassandolo da un hook.
+-- session.cargo (0.0 to 1.0) is the share of cargo left and multiplies the pay:
+-- lower it from a hook for a partial loss.
 local Cfg = Config.Wagon
 local Security = Config.Security
 
@@ -31,7 +31,7 @@ local function getWagon(session)
     return nil
 end
 
--- Il netId puo essere riassegnato dopo l'eliminazione: si controlla anche il modello.
+-- The netId can be reassigned after deletion: the model is checked too.
 local function deleteWagon(netId, modelHash)
     local entity = NetworkGetEntityFromNetworkId(netId)
     if entity and entity ~= 0 and DoesEntityExist(entity) and (GetEntityModel(entity) & 0xFFFFFFFF) == modelHash then
@@ -47,13 +47,13 @@ end
 Delivery.RegisterJob('wagon', {
     Start = function(session)
         if #Cfg.Models == 0 then
-            Delivery.Error('Config.Wagon.Models e vuota: aggiungi un modello per attivare il lavoro.')
+            Delivery.Error('Config.Wagon.Models is empty: add a model to enable the job.')
             return nil, Cfg.Texts.NoModels
         end
 
         local destinations = session.place.Destinations
         if #destinations == 0 then
-            Delivery.Error('carretto, citta %s: Destinations e vuota.', session.location)
+            Delivery.Error('wagon, town %s: Destinations is empty.', session.location)
             return nil
         end
 
@@ -72,7 +72,7 @@ Delivery.RegisterJob('wagon', {
         spawned = function(session, data)
             if session.netId then return end
             session.netId = tonumber(data.netId)
-            Delivery.Log('carretto creato, netId %s', tostring(session.netId))
+            Delivery.Log('wagon created, netId %s', tostring(session.netId))
         end,
 
         seated = function(session)
@@ -97,7 +97,7 @@ Delivery.RegisterJob('wagon', {
             if not wagon then return end
 
             if not isWagonAt(wagon, coords) or not Delivery.IsNear(session.src, GetEntityCoords(wagon), Cfg.DeliverPlayerDistance) then
-                Delivery.Suspect(session, 'consegna lontano dalla destinazione')
+                Delivery.Suspect(session, 'delivery far from the destination')
                 return
             end
 
@@ -105,7 +105,7 @@ Delivery.RegisterJob('wagon', {
             Delivery.CompleteSession(session, { elapsed = os.time() - session.departedAt, multiplier = session.cargo })
         end,
 
-        -- Il client puo solo dichiarare un fallimento, mai un successo.
+        -- The client can only report a failure, never a success.
         fail = function(session, data)
             local message = CLIENT_FAILURES[data.reason]
             if message then
@@ -150,7 +150,7 @@ Delivery.RegisterJob('wagon', {
         local netId, modelHash = session.netId, session.modelHash
         if not netId then return end
 
-        -- Il client elimina il carretto; il server copre disconnessioni e client che non rispondono.
+        -- The client deletes the wagon; the server covers disconnects and unresponsive clients.
         if outcome == 'disconnected' or outcome == 'resource_stop' then
             deleteWagon(netId, modelHash)
         else
@@ -160,5 +160,5 @@ Delivery.RegisterJob('wagon', {
 })
 
 if Config.Robbery.enabled then
-    Delivery.Warn('Config.Robbery.enabled e attivo, ma il furto del carico non e implementato.')
+    Delivery.Warn('Config.Robbery.enabled is on, but cargo robbery is not implemented.')
 end

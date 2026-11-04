@@ -1,56 +1,62 @@
 # pk_delivery
 
-Tre lavori cittadini per RedM: **spazzino**, **consegna casse all'emporio** e **trasporto viveri con carretto**. Supporta VORP, RSG e TZP-Core tramite bridge. Dialoghi, notifiche e barra di avanzamento vengono da `pk_library`.
+Three city jobs for RedM: **street sweeper**, **general store crate delivery** and **wagon supply run**. Works with **VORP**, **RSG** and **TPZ** through a bridge. Dialogs, notifications and the progress bar come from `pk_library`.
 
-## Installazione
+## Requirements
 
-1. Aggiorna `pk_library` (serve la versione con `OpenDialog`).
-2. In `server.cfg`, dopo framework, inventario e `pk_library`: `ensure pk_delivery`
-3. In `config.lua` sostituisci le coordinate di esempio e compila `Config.Wagon.Models`.
+- One framework: `vorp_core`, `rsg-core` or `tpz_core` (detected automatically with `Config.Framework = 'auto'`)
+- `pk_library` (version with `OpenDialog`)
+- `oxmysql` (only used to read the faction column)
 
-Non servono tabelle SQL: i cooldown stanno nel KVP della risorsa e sopravvivono ai riavvii.
+## Installation
 
-## Struttura
+1. Update `pk_library` to the version with NPC dialogs.
+2. In `server.cfg`, after the framework, the inventory and `pk_library`: `ensure pk_delivery`
+3. In `config.lua` set your coordinates and the wagon models in `Config.Wagon.Models`.
+
+No SQL tables needed: cooldowns are stored in the resource KVP and survive restarts.
+
+## Structure
 
 ```
-config.lua                 tutti i valori
-locales.lua                tutti i testi, in italiano e inglese
-shared/utils.lua           log, rilevamento framework, hook
-client/bridge.lua          unico file client che conosce il framework
-client/ui.lua              unico file client che chiama pk_library
-client/utils.lua           prompt, blip, marker, entita
-client/main.lua            NPC, dialoghi, lavoro attivo
-client/jobs/*.lua          un file per lavoro
-server/bridge.lua          unico file server che conosce il framework
-server/ui.lua              unico file server che chiama pk_library
-server/rewards.lua         calcolo e consegna delle ricompense
-server/main.lua            sessioni, cooldown, validazioni, disconnessioni
-server/jobs/*.lua          un file per lavoro
+config.lua                 all values
+locales.lua                all texts, Italian and English
+shared/utils.lua           logs, framework detection, hooks
+client/bridge.lua          the only client file that knows the framework
+client/ui.lua              the only client file that calls pk_library
+client/utils.lua           prompts, blips, markers, entities
+client/main.lua            NPCs, dialogs, active job
+client/jobs/*.lua          one file per job
+server/bridge.lua          the only server file that knows the framework
+server/ui.lua              the only server file that calls pk_library
+server/rewards.lua         reward calculation and delivery
+server/main.lua            sessions, cooldowns, validation, disconnects
+server/jobs/*.lua          one file per job
 ```
 
-## Come si aggiunge
+## How to add
 
-- **Citta**: ogni lavoro ha le sue `Locations` in `config.lua`. Copia un blocco, cambia l'id e le coordinate. Il tag dell'NPC o battute proprie si aggiungono in `Locations` del lavoro in `locales.lua`; senza voci valgono i testi del lavoro. `Enabled = false` spegne una citta, `Reward` nella citta sostituisce quella del lavoro. Il cooldown e comune a tutte le citta.
-- **Punti di pulizia**: righe in `Points` della citta. `PointsPerJob` indica quanti ne estrae il server.
-- **Casse**: `PickupPoint` della citta e il punto unico da cui si prendono tutte; `Count` indica quante consegnarne.
-- **NPC**: blocco `Npc` della citta (modello, `Coords` con heading, scenario, blip).
-- **Carretto**: una voce in `Config.Wagon.Models`; i campi sono spiegati nel commento sopra la lista.
-- **Destinazioni**: righe in `Destinations` della citta, con il nome di ogni `Key` in `Texts.Destinations` del lavoro `wagon` in `locales.lua`.
-- **Lingua**: copia un blocco di `locales.lua`, traducilo e imposta `Config.Locale`. Le voci mancanti restano in italiano.
-- **Oggetti di ricompensa**: `Reward.Mode = 'items'` o `'both'` e `Items = { { Name = 'nome_item', Min = 1, Max = 2, Chance = 50, FallbackPrice = 1.0 } }`.
-- **Altro framework**: aggiungi la funzione in `Frameworks` in `server/bridge.lua` e `client/bridge.lua`, con la stessa interfaccia scritta in cima ai file, e il nome risorsa in `FRAMEWORK_RESOURCES` in `shared/utils.lua`.
-- **Altro lavoro**: voce in `Config.Jobs`, testi in `Jobs` di `locales.lua`, poi `Delivery.RegisterJob` in `server/jobs/` e `client/jobs/`. L'interfaccia e descritta in cima a `server/main.lua` e `client/main.lua`.
-- **Dialogo**: i testi sono nel blocco `Dialog` di ogni lavoro in `locales.lua`; il pannello e in `pk_library` (`html/npc-dialog.*`); la chiamata in `client/ui.lua`.
+- **Towns**: every job has its own `Locations` in `config.lua`. Copy a block and change the id and the coordinates. NPC tags or custom lines go in the job's `Locations` in `locales.lua`; without entries the job's texts are used. `Enabled = false` turns a town off, `Reward` in a town replaces the job's one. The cooldown is shared by all towns.
+- **Sweeping points**: rows in the town's `Points`. `PointsPerJob` sets how many the server draws.
+- **Crates**: the town's `PickupPoint` is the single point all crates are taken from; `Count` sets how many to deliver.
+- **NPC**: the town's `Npc` block (model, `Coords` with heading, scenario, blip).
+- **Wagon**: an entry in `Config.Wagon.Models`; the fields are explained in the comment above the list.
+- **Destinations**: rows in the town's `Destinations`, with the name of every `Key` in `Texts.Destinations` of the `wagon` job in `locales.lua`.
+- **Language**: copy a block of `locales.lua`, translate it and set `Config.Locale`. Missing entries stay in Italian.
+- **Item rewards**: `Reward.Mode = 'items'` or `'both'` and `Items = { { Name = 'item_name', Min = 1, Max = 2, Chance = 50, FallbackPrice = 1.0 } }`.
+- **Another framework**: add a function in `Frameworks` in `server/bridge.lua` and `client/bridge.lua`, with the interface described at the top of those files, and the resource name in `FRAMEWORK_RESOURCES` in `shared/utils.lua`.
+- **Another job**: an entry in `Config.Jobs`, texts in `Jobs` of `locales.lua`, then `Delivery.RegisterJob` in `server/jobs/` and `client/jobs/`. The interface is described at the top of `server/main.lua` and `client/main.lua`.
+- **Dialog**: texts are in each job's `Dialog` block in `locales.lua`; the panel lives in `pk_library` (`html/npc-dialog.*`); the call is in `client/ui.lua`.
 
-## Limitare un punto a job o fazione
+## Restricting a location to a job or faction
 
-Ogni punto in `Locations` puo avere un blocco `Access`. Senza `Access` il lavoro e aperto a tutti.
+Every entry in `Locations` can have an `Access` block. Without `Access` the job is open to everyone.
 
 ```lua
 rhodes = {
     Access = {
-        Jobs = { 'sceriffo', { Job = 'medico', MinGrade = 2 } },
-        Factions = { 'Nome Fazione' },
+        Jobs = { 'sheriff', { Job = 'doctor', MinGrade = 2 } },
+        Factions = { 'Faction Name' },
         Mode = 'any',
     },
     Npc = { ... },
@@ -58,30 +64,30 @@ rhodes = {
 },
 ```
 
-- `Jobs`: nomi dei job. Con `{ Job = 'nome', MinGrade = 2 }` serve anche un grado minimo.
-- `Factions`: nomi delle fazioni. `Factions = true` accetta chiunque abbia una fazione assegnata.
-- `Mode`: `'any'` basta il job oppure la fazione (predefinito); `'all'` servono entrambi.
+- `Jobs`: job names. With `{ Job = 'name', MinGrade = 2 }` a minimum grade is required too.
+- `Factions`: faction names. `Factions = true` accepts anyone with an assigned faction.
+- `Mode`: `'any'` job or faction is enough (default); `'all'` both are required.
 
-Maiuscole e minuscole non contano. Il controllo avviene sul server quando il giocatore accetta: l'NPC resta visibile a tutti, chi non ha i requisiti riceve un avviso.
+Case does not matter. The check runs on the server when the player accepts: the NPC stays visible to everyone, players without the requirements get a notice.
 
-### Fazioni: la colonna nel database
+### Factions: the database column
 
-La fazione non arriva dal framework: `pk_delivery` la legge dalla tabella dei personaggi, in tempo reale, dalla colonna indicata in `Config.FactionAccess.Column` (predefinita `fazione`). Se aggiungi la colonna a `characters`, viene letta quella:
+The faction does not come from the framework: `pk_delivery` reads it live from the characters table, from the column set in `Config.FactionAccess.Column` (default `faction`). Add the column to `characters` if you need it:
 
 ```sql
-ALTER TABLE `characters` ADD COLUMN `fazione` VARCHAR(64) NULL DEFAULT NULL;
+ALTER TABLE `characters` ADD COLUMN `faction` VARCHAR(64) NULL DEFAULT NULL;
 ```
 
-Se la colonna esiste gia, non serve fare nulla. Con un nome diverso basta cambiare `Column`.
+If your server already has a faction column, just set its name in `Column`.
 
-Il valore nella colonna deve corrispondere al nome scritto in `Factions`. I valori in `Config.FactionAccess.EmptyValues` contano come "nessuna fazione". Se la colonna manca, in console compare un errore una sola volta: le regole sulle fazioni non fanno passare nessuno, quelle sui job continuano a funzionare.
+The value in the column must match the name written in `Factions`. Values in `Config.FactionAccess.EmptyValues` count as "no faction". If the column is missing, an error shows in the console once: faction rules let nobody through, job rules keep working.
 
-Su VORP la riga si trova con `charidentifier`. Su RSG (`players`, `citizenid`) e TZP la tabella e da verificare in `Bridge.GetFactionRow`.
+On VORP the row is found by `charidentifier`, on RSG by `citizenid` in `players`. On TPZ check the table in `Bridge.GetFactionRow`.
 
-## Furto del carico
+## Cargo robbery
 
-`Config.Robbery` resta `enabled = false`: non c'e nessuna logica di assalto. I punti di estensione sono descritti in cima a `server/jobs/wagon.lua`: hook `wagon:departed`, `wagon:tick`, `wagon:delivered`, `wagon:ended`, e `session.cargo` che moltiplica la paga.
+`Config.Robbery` stays `enabled = false`: there is no robbery logic yet. The extension points are described at the top of `server/jobs/wagon.lua`: hooks `wagon:departed`, `wagon:tick`, `wagon:delivered`, `wagon:ended`, and `session.cargo`, which multiplies the pay.
 
-## Comandi
+## Commands
 
-- `/annullalavoro` annulla il lavoro in corso (`Config.CancelCommand`). Si puo anche rinunciare parlando con l'NPC del lavoro.
+- `/canceljob` cancels the current job (`Config.CancelCommand`). You can also quit by talking to the job's NPC.

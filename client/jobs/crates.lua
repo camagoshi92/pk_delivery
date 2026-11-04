@@ -1,5 +1,5 @@
--- Lavoro 2: la cassa al punto di ritiro e visibile solo al giocatore e resta finche ne rimangono;
--- quella in mano e in rete, cosi la vedono tutti.
+-- Job 2: the crate at the pickup point is visible only to the player and stays while some are left;
+-- the one in hand is networked, so everyone sees it.
 local Cfg = Config.Crates
 local Texts = Cfg.Texts
 local Carry = Cfg.Carry
@@ -31,7 +31,7 @@ local function spawnPile()
     state.pile = Delivery.TrackEntity(object)
 end
 
--- La cassa al punto di ritiro c'e finche ne resta almeno una.
+-- The crate at the pickup point exists while at least one is left.
 local function updatePile(remaining)
     state.remaining = remaining
 
@@ -68,7 +68,7 @@ local function stopCarry(ped)
     end
 end
 
--- Va ripetuta ogni frame finche la cassa e in mano.
+-- Must run every frame while the crate is in hand.
 local function applyCarryRestrictions(ped)
     for _, control in ipairs(Carry.BlockedControls) do
         DisableControlAction(0, control, true)

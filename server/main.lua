@@ -1,11 +1,11 @@
--- Stato dei lavori: unica fonte di verita. Il client chiede, il server decide.
+-- Job state: single source of truth. The client asks, the server decides.
 --
--- Ogni lavoro si registra con Delivery.RegisterJob(id, {
---     Start(session)            -> payload per il client, oppure nil e testo d'errore
---     Actions = { nome = function(session, data) end }   richieste dal client
---     Tick(session)             facoltativo, ogni secondo
---     OnDeath(session)          facoltativo, di default il lavoro fallisce
---     OnEnd(session, outcome)   facoltativo, pulizia lato server
+-- Every job registers with Delivery.RegisterJob(id, {
+--     Start(session)            -> payload for the client, or nil and an error text
+--     Actions = { name = function(session, data) end }   requests from the client
+--     Tick(session)             optional, every second
+--     OnDeath(session)          optional, the job fails by default
+--     OnEnd(session, outcome)   optional, server-side cleanup
 -- })
 local Texts = Config.Texts
 local Security = Config.Security
@@ -25,7 +25,7 @@ function Delivery.GetPlayerCoords(src)
     return GetEntityCoords(ped)
 end
 
--- Vero se il giocatore e entro radius da coords, piu il margine di rete.
+-- True if the player is within radius of coords, plus the network margin.
 function Delivery.IsNear(src, coords, radius)
     local playerCoords = Delivery.GetPlayerCoords(src)
     if not playerCoords then
@@ -39,14 +39,14 @@ function Delivery.SendEvent(session, name, data)
 end
 
 function Delivery.Suspect(session, reason, ...)
-    Delivery.Warn('azione rifiutata, giocatore %s, lavoro %s: %s', session.src, session.id, reason:format(...))
+    Delivery.Warn('action rejected, player %s, job %s: %s', session.src, session.id, reason:format(...))
 end
 
 function Delivery.ElapsedMs(startedAt)
     return GetGameTimer() - startedAt
 end
 
--- Mescola una copia della lista e ne restituisce i primi count elementi, senza ripetizioni.
+-- Shuffles a copy of the list and returns its first count items, without repeats.
 function Delivery.PickRandom(list, count)
     local pool = {}
     for index, value in ipairs(list) do
@@ -67,7 +67,7 @@ local function cooldownKey(charKey, jobId)
     return ('cooldown:%s:%s'):format(jobId, charKey)
 end
 
--- Con i cooldown del lavoro a 0 non si aspetta, nemmeno se resta un'attesa gia salvata.
+-- With the job cooldowns at 0 there is no wait, even if a saved wait is left.
 local function cooldownRemaining(charKey, jobId, cooldown)
     if (cooldown.Success or 0) <= 0 and (cooldown.Fail or 0) <= 0 then
         return 0
@@ -81,7 +81,7 @@ local function setCooldown(charKey, jobId, seconds)
     end
 end
 
--- Chiude il lavoro una sola volta: il record sparisce prima di qualsiasi pagamento.
+-- Ends the job only once: the record is removed before any payment.
 local function closeSession(session, outcome)
     if Sessions[session.src] ~= session then
         return false
@@ -96,7 +96,7 @@ local function closeSession(session, outcome)
 
     local cooldown = session.config.Cooldown or {}
     setCooldown(session.charKey, session.id, outcome == 'success' and cooldown.Success or cooldown.Fail)
-    Delivery.Log('lavoro %s giocatore %s: %s', session.id, session.src, outcome)
+    Delivery.Log('job %s player %s: %s', session.id, session.src, outcome)
     return true
 end
 
@@ -112,7 +112,7 @@ function Delivery.FailSession(session, message, outcome)
     end
 end
 
--- Unica via verso il pagamento. options come in Delivery.GiveReward.
+-- The only path to the payment. options as in Delivery.GiveReward.
 function Delivery.CompleteSession(session, options)
     if closeSession(session, 'success') then
         notifyEnded(session, 'success')
@@ -211,7 +211,7 @@ RegisterNetEvent('pk_delivery:server:action', function(action, data)
     if handler then
         handler(session, type(data) == 'table' and data or {})
     else
-        Delivery.Suspect(session, 'azione sconosciuta %s', tostring(action))
+        Delivery.Suspect(session, 'unknown action %s', tostring(action))
     end
 end)
 

@@ -1,4 +1,4 @@
--- Prompt, blip, marker ed entita. Blip ed entita creati qui vengono eliminati da Delivery.Cleanup().
+-- Prompts, blips, markers and entities. Blips and entities created here are removed by Delivery.Cleanup().
 local BLIP_STYLE = 1664425300
 local BLIP_STYLE_ENTITY = 631964804
 
@@ -10,7 +10,7 @@ local function varString(text)
     return CreateVarString(10, 'LITERAL_STRING', text)
 end
 
--- Prompt in un suo gruppo: Show va chiamata ogni frame in cui deve comparire.
+-- Prompt in its own group: Show must be called every frame it has to appear.
 function Delivery.NewPrompt(control, label, groupLabel)
     local group = GetRandomIntInRange(0, 0xffffff)
     local handle = UiPromptRegisterBegin()
@@ -51,7 +51,7 @@ local function styleBlip(blip, config)
     Citizen.InvokeNative(0x9CB1A1623062F402, blip, config.Name or '')
 end
 
--- Blip permanente, non legato a un lavoro.
+-- Permanent blip, not tied to a job.
 function Delivery.CreateBlip(coords, config)
     local blip = BlipAddForCoords(BLIP_STYLE, coords.x, coords.y, coords.z)
     styleBlip(blip, config)
@@ -78,7 +78,7 @@ function Delivery.RemoveBlip(blip)
     end
 end
 
--- Con radius il cerchio mostra l'area valida; senza, usa la misura di Config.Marker.
+-- With radius the circle shows the valid area; without it, Config.Marker's size is used.
 function Delivery.DrawMarker(coords, radius)
     local marker = Config.Marker
     local color = marker.Color
@@ -98,7 +98,7 @@ end
 function Delivery.LoadModel(model)
     local hash = type(model) == 'string' and joaat(model) or model
     if not IsModelInCdimage(hash) then
-        Delivery.Error('modello inesistente: %s', tostring(model))
+        Delivery.Error('model does not exist: %s', tostring(model))
         return nil
     end
 
@@ -106,7 +106,7 @@ function Delivery.LoadModel(model)
     local timeoutAt = GetGameTimer() + 8000
     while not HasModelLoaded(hash) do
         if GetGameTimer() >= timeoutAt then
-            Delivery.Error('modello non caricato: %s', tostring(model))
+            Delivery.Error('model not loaded: %s', tostring(model))
             return nil
         end
         Wait(10)
@@ -124,7 +124,7 @@ function Delivery.LoadAnim(dict)
     local timeoutAt = GetGameTimer() + 8000
     while not HasAnimDictLoaded(dict) do
         if GetGameTimer() >= timeoutAt then
-            Delivery.Error('animazione non caricata: %s', dict)
+            Delivery.Error('animation not loaded: %s', dict)
             return false
         end
         Wait(10)
@@ -167,7 +167,7 @@ end
 function Delivery.AttachToPed(entity, ped, config)
     local bone = GetEntityBoneIndexByName(ped, config.Bone)
     local offset, rotation = config.Offset, config.Rotation
-    -- Con la collisione attiva l'oggetto in mano solleva il personaggio da terra.
+    -- With collision on, the object in hand lifts the character off the ground.
     SetEntityCollision(entity, false, false)
     AttachEntityToEntity(
         entity, ped, bone,

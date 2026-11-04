@@ -1,10 +1,10 @@
--- NPC, dialoghi e ciclo di vita del lavoro attivo sul client.
+-- NPCs, dialogs and life cycle of the active job on the client.
 --
--- Ogni lavoro si registra con Delivery.RegisterJob(id, {
---     Start(payload, token, place)   avvio; token identifica questo lavoro, place e la citta
---     Stop(outcome)           pulizia propria; blip ed entita tracciati li toglie Delivery.Cleanup
---     Events = { nome = function(data) end }   messaggi dal server
---     OnDeath()               facoltativo
+-- Every job registers with Delivery.RegisterJob(id, {
+--     Start(payload, token, place)   start; token identifies this job, place is the town
+--     Stop(outcome)           own cleanup; tracked blips and entities are removed by Delivery.Cleanup
+--     Events = { name = function(data) end }   messages from the server
+--     OnDeath()               optional
 -- })
 local Texts = Config.Texts
 
@@ -25,7 +25,7 @@ function Delivery.SendAction(action, data)
     TriggerServerEvent('pk_delivery:server:action', action, data)
 end
 
--- Il lavoro e finito: la paga si ritira dall'NPC, segnato sulla mappa.
+-- The job is done: the pay is collected from the NPC, marked on the map.
 function Delivery.SetAwaitingReturn()
     if not Active then return end
     Active.awaitingReturn = true
@@ -80,7 +80,7 @@ Bridge.OnDeath(function()
     TriggerServerEvent('pk_delivery:server:died')
 end)
 
--- Una citta puo avere battute proprie; altrimenti valgono quelle del lavoro.
+-- A town can have its own lines; otherwise the job's ones apply.
 local function openDialog(npc, dialogKey, buttons)
     local cityDialog = npc.place.Dialog or {}
 
@@ -139,7 +139,7 @@ local function deleteNpc(npc)
     npc.ped = nil
 end
 
--- Le coordinate prese col giocatore sono circa un metro sopra il terreno.
+-- Coordinates taken from the player are about one meter above the ground.
 local NPC_GROUND_OFFSET = 1.0
 
 local function spawnNpc(npc, config)
@@ -151,7 +151,7 @@ local function spawnNpc(npc, config)
     SetModelAsNoLongerNeeded(hash)
     if not ped or ped == 0 then return end
 
-    Citizen.InvokeNative(0x283978A15512B2FE, ped, true) -- SetRandomOutfitVariation: senza, il ped e invisibile
+    Citizen.InvokeNative(0x283978A15512B2FE, ped, true) -- SetRandomOutfitVariation: without it the ped is invisible
     SetEntityInvincible(ped, true)
     SetEntityCanBeDamaged(ped, false)
     SetBlockingOfNonTemporaryEvents(ped, true)
@@ -165,7 +165,7 @@ local function spawnNpc(npc, config)
     npc.ped = ped
 end
 
--- Crea gli NPC vicini ed elimina quelli lontani.
+-- Creates nearby NPCs and deletes far ones.
 local function npcStreamLoop()
     while true do
         local coords = GetEntityCoords(PlayerPedId())

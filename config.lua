@@ -2,22 +2,22 @@ Config = {}
 
 Config.Debug = false
 
-Config.Locale = 'it' -- 'it' | 'en'; tutti i testi sono in locales.lua
+Config.Locale = 'en' -- 'it' | 'en'; all texts are in locales.lua
 
--- 'auto' | 'vorp' | 'rsg' | 'tzp'. Con 'auto' sceglie in base alle risorse avviate.
+-- 'auto' | 'vorp' | 'rsg' | 'tzp'. With 'auto' it picks the framework from the started resources.
 Config.Framework = 'auto'
 
--- Comando per annullare il lavoro in corso. '' per disattivarlo.
-Config.CancelCommand = 'annullalavoro'
+-- Command to cancel the current job. '' to disable it.
+Config.CancelCommand = 'canceljob'
 
--- Tasti dei prompt (hash dei controlli RedM).
+-- Prompt keys (RedM control hashes).
 Config.Keys = {
     Talk = 0xCEFD9220,      -- E
     Action = 0x760A9C6F,    -- G
     Interrupt = 0x8CC9CD42, -- X
 }
 
-Config.NpcSpawnDistance = 60.0    -- oltre questa distanza l'NPC non esiste sul client
+Config.NpcSpawnDistance = 60.0    -- beyond this distance the NPC does not exist on the client
 Config.NpcTalkDistance = 2.5
 Config.MarkerDrawDistance = 40.0
 
@@ -27,53 +27,53 @@ Config.Marker = {
     Color = { r = 214, g = 173, b = 92, a = 80 },
 }
 
--- Validazioni lato server. I limiti sono volutamente larghi: bloccano i trucchi, non i giocatori.
+-- Server-side validation. Limits are deliberately loose: they stop cheats, not players.
 Config.Security = {
-    NpcDistance = 6.0,       -- distanza massima dall'NPC per accettare e riscuotere
-    DistanceMargin = 2.0,    -- metri concessi oltre il raggio del punto (ritardo di rete)
-    MinWorkRatio = 0.85,     -- frazione minima della durata di un'azione a tempo
-    MaxCarrySpeed = 7.0,     -- m/s massimi a piedi con la cassa
-    ActionThrottleMs = 150,  -- pausa minima tra due azioni dello stesso giocatore
+    NpcDistance = 6.0,       -- max distance from the NPC to accept a job and collect the pay
+    DistanceMargin = 2.0,    -- meters allowed beyond a point's radius (network delay)
+    MinWorkRatio = 0.85,     -- minimum fraction of a timed action's duration
+    MaxCarrySpeed = 7.0,     -- max m/s on foot while carrying a crate
+    ActionThrottleMs = 150,  -- minimum pause between two actions of the same player
 }
 
--- Inventario pieno: 'money' paga l'oggetto in contanti (FallbackPrice), 'lose' lo perde.
+-- Full inventory: 'money' pays the item in cash (FallbackPrice), 'lose' drops it.
 Config.InventoryFull = 'money'
 
--- Fazioni per Access: colonna della tabella dei personaggi (vedi README).
+-- Factions for Access: column of the characters table (see README).
 Config.FactionAccess = {
-    Column = 'fazione',
-    EmptyValues = { '', 'nessuna', 'none' }, -- valori che significano "nessuna fazione"
+    Column = 'faction',
+    EmptyValues = { '', 'none' }, -- values meaning "no faction"
 }
 
 --------------------------------------------------------------------------------
--- RICOMPENSE (stessa struttura per ogni lavoro)
+-- REWARDS (same structure for every job)
 --
 -- Mode: 'money' | 'items' | 'both'
--- Money: Min/Max casuali; Currency: 'cash' | 'gold' (se il framework non ha l'oro paga in contanti).
--- Items: { Name = 'nome_item', Min = 1, Max = 2, Chance = 100, FallbackPrice = 1.0 }
---        Name vuoto = voce ignorata. Chance in percentuale.
---        FallbackPrice = prezzo unitario se l'inventario e pieno e InventoryFull = 'money'.
--- TimeBonus (lavori 2 e 3): sotto TargetSeconds il denaro aumenta di Percent. Solo sul denaro.
+-- Money: random Min/Max; Currency: 'cash' | 'gold' (paid in cash if the framework has no gold).
+-- Items: { Name = 'item_name', Min = 1, Max = 2, Chance = 100, FallbackPrice = 1.0 }
+--        Empty Name = entry ignored. Chance is a percentage.
+--        FallbackPrice = unit price paid when the inventory is full and InventoryFull = 'money'.
+-- TimeBonus (jobs 2 and 3): under TargetSeconds the money grows by Percent. Money only.
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- CITTA
+-- TOWNS
 --
--- Ogni lavoro ha le sue Locations: id della citta -> NPC e punti di quella citta.
--- Per aggiungerne una copia un blocco, cambia l'id e le coordinate.
--- Enabled = false spegne una sola citta. Reward nella citta sostituisce quella del lavoro.
--- Il cooldown e per lavoro, comune a tutte le citta.
+-- Every job has its own Locations: town id -> NPC and points of that town.
+-- To add one, copy a block and change the id and the coordinates.
+-- Enabled = false turns off a single town. Reward in a town replaces the job's one.
+-- The cooldown is per job, shared by all towns.
 --
--- Access nella citta limita chi puo accettare il lavoro in quel punto; senza, e aperto a tutti:
+-- Access in a town limits who can accept the job there; without it the job is open to everyone:
 --     Access = {
---         Jobs = { 'sceriffo', { Job = 'medico', MinGrade = 2 } },
---         Factions = { 'Nome Fazione' },   -- true = qualunque fazione assegnata
---         Mode = 'any',                    -- 'any': job O fazione; 'all': job E fazione
+--         Jobs = { 'sheriff', { Job = 'doctor', MinGrade = 2 } },
+--         Factions = { 'Faction Name' },   -- true = any assigned faction
+--         Mode = 'any',                    -- 'any': job OR faction; 'all': job AND faction
 --     },
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- LAVORO 1 - SPAZZINO
+-- JOB 1 - STREET SWEEPER
 --------------------------------------------------------------------------------
 Config.Sweeper = {
     Enabled = true,
@@ -100,7 +100,7 @@ Config.Sweeper = {
             },
         },
 
-        strawberry = { -- COORDINATE DI ESEMPIO: da sostituire
+        strawberry = {
             Npc = {
                 Model = 'a_m_m_valfarmer_01',
                 Coords = vector4(-1786.36, -404.45, 156.49, 274.10),
@@ -121,15 +121,15 @@ Config.Sweeper = {
     },
 
     PointsPerJob = 5,
-    ShowAllBlips = false,      -- false: solo il punto corrente; true: tutti
-    AutoPay = false,           -- true: paga dopo l'ultimo punto senza tornare dall'NPC
+    ShowAllBlips = false,      -- false: current point only; true: all of them
+    AutoPay = false,           -- true: pays after the last point without going back to the NPC
     InteractDistance = 2.0,
-    WorkDuration = 12,         -- secondi per ogni punto
+    WorkDuration = 12,         -- seconds per point
 
     Work = {
         Mode = 'scenario',     -- 'scenario' | 'prop'
         Scenario = 'WORLD_HUMAN_BROOM',
-        -- Mode = 'prop': scopa in mano + animazione. Dict e Name vanno scelti in gioco.
+        -- Mode = 'prop': broom in hand + animation. Dict and Name must be picked in game.
         Prop = {
             Model = 'p_broom01x',
             Bone = 'SKEL_R_Hand',
@@ -155,12 +155,12 @@ Config.Sweeper = {
 }
 
 --------------------------------------------------------------------------------
--- LAVORO 2 - CONSEGNA CASSE ALL'EMPORIO
+-- JOB 2 - GENERAL STORE CRATE DELIVERY
 --------------------------------------------------------------------------------
 Config.Crates = {
     Enabled = true,
 
-    Locations = { -- 
+    Locations = {
         valentine = {
             Npc = {
                 Model = 'a_m_m_valfarmer_01',
@@ -184,28 +184,28 @@ Config.Crates = {
         },
     },
 
-    Count = 5,                 -- casse da consegnare
+    Count = 5,                 -- crates to deliver
     Model = 'p_package04bx',
     DeliveryRadius = 2.0,
     InteractDistance = 1.0,
 
-    OnDrop = 'return',         -- 'return': la cassa torna al punto di ritiro; 'fail': lavoro fallito
-    DropOnRagdoll = true,      -- cadendo si perde la cassa
+    OnDrop = 'return',         -- 'return': the crate goes back to the pickup point; 'fail': job failed
+    DropOnRagdoll = true,      -- falling down drops the crate
 
     Carry = {
         Bone = 'SKEL_L_Hand',
-        Offset = vector3(0.1, -0.14, 0.21),       -- valori di partenza, da rifinire in gioco
+        Offset = vector3(0.1, -0.14, 0.21),       -- starting values, fine-tune in game
         Rotation = vector3(263.29, 709.19, 244.3),
         Anim = { Dict = 'mech_carry_box', Name = 'idle', Flags = 31 },
         PutDown = { Scenario = 'WORLD_HUMAN_CROUCH_INSPECT', Duration = 1500 },
-        MoveRatio = 1.0,       -- 1.0 camminata, 0 = nessun limite di velocita
+        MoveRatio = 1.0,       -- 1.0 walk, 0 = no speed limit
         BlockedControls = {
-            0x8FFC75D6, -- corsa
-            0xD9D0E1C0, -- salto e arrampicata
-            0xF84FA74F, -- mira
-            0x07CE1E61, -- attacco
-            0xAC4BD4F1, -- ruota armi
-            0xCEFD9220, -- salire a cavallo o su un mezzo
+            0x8FFC75D6, -- sprint
+            0xD9D0E1C0, -- jump and climb
+            0xF84FA74F, -- aim
+            0x07CE1E61, -- attack
+            0xAC4BD4F1, -- weapon wheel
+            0xCEFD9220, -- mount a horse or a vehicle
         },
     },
 
@@ -225,7 +225,7 @@ Config.Crates = {
 }
 
 --------------------------------------------------------------------------------
--- LAVORO 3 - TRASPORTO VIVERI CON CARRETTO
+-- JOB 3 - SUPPLY RUN WITH A WAGON
 --------------------------------------------------------------------------------
 Config.Wagon = {
     Enabled = true,
@@ -253,7 +253,7 @@ Config.Wagon = {
                 Scenario = 'WORLD_HUMAN_SMOKE',
                 Blip = { Enabled = true, Sprite = 'blip_teamsters' },
             },
-            SpawnPoint = vector4(1339.07, -1266.65, 77.58, 75.23), -- accanto all'NPC
+            SpawnPoint = vector4(1339.07, -1266.65, 77.58, 75.23), -- next to the NPC
             Destinations = {
                 --{ Key = 'emerald', Coords = vector4(1420.0, 280.0, 89.5, 0.0) },
                 --{ Key = 'valentine', Coords = vector4(-290.0, 780.0, 118.0, 0.0) },
@@ -262,18 +262,18 @@ Config.Wagon = {
         },
     },
 
-    -- MODELLI DEL CARRETTO: da compilare. Con la lista vuota il lavoro non parte
-    -- e in console compare un errore. Il server ne sceglie uno a caso.
+    -- WAGON MODELS. With an empty list the job does not start
+    -- and an error shows in the console. The server picks one at random.
     --
     -- Models = {
     --     {
-    --         Model = 'nome_modello',              -- obbligatorio
-    --         Horses = true,                       -- false = senza cavalli automatici (DA VERIFICARE in gioco)
-    --         Propset = 'nome_propset',            -- facoltativo: carico nativo del mezzo
-    --         Props = {                            -- facoltativo: prop attaccati come carico
+    --         Model = 'model_name',                 -- required
+    --         Horses = true,                       -- false = no automatic horses
+    --         Propset = 'propset_name',            -- optional: native cargo of the vehicle
+    --         Props = {                            -- optional: props attached as cargo
     --             { Model = 'p_crate14x', Offset = vector3(0.0, -1.0, 0.8), Rotation = vector3(0.0, 0.0, 0.0) },
     --         },
-    --         SpawnOffset = vector3(0.0, 0.0, 0.0), -- rispetto a SpawnPoint, ruotato col suo heading
+    --         SpawnOffset = vector3(0.0, 0.0, 0.0), -- relative to SpawnPoint, rotated by its heading
     --     },
     -- },
     Models = {
@@ -281,13 +281,13 @@ Config.Wagon = {
     },
 
     DestinationRadius = 3.0,
-    DeliverPlayerDistance = 6.0, -- distanza massima dal carretto per consegnare
+    DeliverPlayerDistance = 6.0, -- max distance from the wagon to deliver
 
-    MaxSeconds = 900,          -- tempo massimo da quando sali a cassetta
-    BoardSeconds = 300,        -- tempo per salire sul carretto dopo l'accettazione
-    AbandonDistance = 80.0,    -- oltre questa distanza dal carretto il lavoro fallisce
-    MaxDeliverySpeed = 0.5,    -- m/s: per consegnare il carretto deve essere fermo
-    TimerWarnings = { 300, 60 }, -- avvisi a tot secondi dalla scadenza
+    MaxSeconds = 900,          -- max time from when you take the reins
+    BoardSeconds = 300,        -- time to board the wagon after accepting
+    AbandonDistance = 80.0,    -- beyond this distance from the wagon the job fails
+    MaxDeliverySpeed = 0.5,    -- m/s: the wagon must be stopped to deliver
+    TimerWarnings = { 300, 60 }, -- warnings at these seconds before the deadline
 
     DestinationBlip = { Sprite = 'blip_ambient_tracking' },
 
@@ -304,21 +304,21 @@ Config.Wagon = {
 }
 
 --------------------------------------------------------------------------------
--- FURTO DEL CARICO: PREDISPOSIZIONE, NON IMPLEMENTATO
--- Lasciare enabled = false. Punti di estensione in server/jobs/wagon.lua (Hooks).
+-- CARGO ROBBERY: PREPARED, NOT IMPLEMENTED
+-- Leave enabled = false. Extension points in server/jobs/wagon.lua (Hooks).
 --------------------------------------------------------------------------------
 Config.Robbery = {
     enabled = false,
-    Chance = 0,            -- probabilita di assalto per viaggio
-    MinDistance = 0.0,     -- metri percorsi prima di un possibile assalto
+    Chance = 0,            -- robbery chance per trip
+    MinDistance = 0.0,     -- meters traveled before a possible robbery
     Bandits = { Count = 0, Models = {} },
-    CargoLossPercent = 0,  -- perdita parziale del carico (riduce la paga)
+    CargoLossPercent = 0,  -- partial cargo loss (lowers the pay)
 }
 
--- Interruttore generale: false spegne tutti i lavori (niente NPC, blip o avvii).
+-- Master switch: false turns off every job (no NPCs, blips or starts).
 Config.Enabled = true
 
--- Elenco dei lavori: la chiave e l'id usato da client e server. Solo lavori qui dentro.
+-- Job list: the key is the id used by client and server. Only jobs listed here.
 Config.Jobs = {
     sweeper = Config.Sweeper,
     crates = Config.Crates,

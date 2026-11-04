@@ -1,4 +1,4 @@
--- Lavoro 3: il tempo parte quando si sale a cassetta; il server resta l'arbitro.
+-- Job 3: the timer starts when the player takes the reins; the server stays the referee.
 local Cfg = Config.Wagon
 local Texts = Cfg.Texts
 
@@ -16,7 +16,7 @@ local function ensurePrompt()
     DeliverPrompt = Delivery.NewPrompt(Config.Keys.Action, Texts.Prompt, Texts.PromptGroup)
 end
 
--- SpawnOffset e relativo al punto di spawn: va ruotato col suo heading.
+-- SpawnOffset is relative to the spawn point: rotate it by its heading.
 local function spawnCoords(entry, point)
     local offset = entry.SpawnOffset or vector3(0.0, 0.0, 0.0)
     local radians = math.rad(point.w)
@@ -52,13 +52,13 @@ local function loadCargo(wagon, entry)
     end
 end
 
--- Le coordinate prese col giocatore sono circa un metro sopra il terreno.
+-- Coordinates taken from the player are about one meter above the ground.
 local function groundZ(coords)
     local found, z = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + GROUND_PROBE_HEIGHT, false)
     return found and z or coords.z
 end
 
--- Subito dopo la creazione la collisione puo non essere pronta: si riprova finche riesce.
+-- Right after creation the collision may not be ready: retry until it works.
 local function placeOnGround(wagon)
     for _ = 1, GROUND_ATTEMPTS do
         if SetVehicleOnGroundProperly(wagon) then
@@ -66,7 +66,7 @@ local function placeOnGround(wagon)
         end
         Wait(100)
     end
-    Delivery.Warn('carretto non appoggiato al terreno: controlla SpawnPoint.')
+    Delivery.Warn('wagon not placed on the ground: check SpawnPoint.')
 end
 
 local function spawnWagon(entry, spawnPoint)
@@ -84,7 +84,7 @@ local function spawnWagon(entry, spawnPoint)
     placeOnGround(wagon)
     SetEntityAsMissionEntity(wagon, true, true)
     loadCargo(wagon, entry)
-    Delivery.Log('carretto %s, cavallo nei finimenti: %s', entry.Model, tostring(Citizen.InvokeNative(0xA8BA0BAE0173457B, wagon, 0)))
+    Delivery.Log('wagon %s, horse in harness: %s', entry.Model, tostring(Citizen.InvokeNative(0xA8BA0BAE0173457B, wagon, 0)))
     return Delivery.TrackEntity(wagon)
 end
 
@@ -112,7 +112,7 @@ local function warnTimer()
     end
 end
 
--- Conta il carretto, non il cocchiere: con i cavalli il mezzo e lungo e chi guida sta davanti.
+-- The wagon counts, not the driver: with horses the vehicle is long and the driver sits in front.
 local function deliveryFrame(ped, destination)
     local coords = vector3(destination.x, destination.y, destination.z)
     local distance = #(GetEntityCoords(state.wagon) - coords)
@@ -122,7 +122,7 @@ local function deliveryFrame(ped, destination)
 
     Delivery.DrawMarker(coords, Cfg.DestinationRadius)
 
-    -- Si consegna a cassetta o a piedi accanto al carretto: basta che sia fermo nel cerchio.
+    -- Delivery works from the seat or on foot next to the wagon: it just has to be stopped in the circle.
     local speed = GetEntitySpeed(state.wagon)
     local playerDistance = #(GetEntityCoords(ped) - GetEntityCoords(state.wagon))
     local canDeliver = distance <= Cfg.DestinationRadius
@@ -131,7 +131,7 @@ local function deliveryFrame(ped, destination)
 
     if Config.Debug and GetGameTimer() >= state.nextDebugAt then
         state.nextDebugAt = GetGameTimer() + DEBUG_INTERVAL_MS
-        Delivery.Log('consegna: distanza %.1f/%.1f, velocita %.2f/%.2f, giocatore %.1f/%.1f, a cassetta %s',
+        Delivery.Log('delivery: distance %.1f/%.1f, speed %.2f/%.2f, player %.1f/%.1f, on seat %s',
             distance, Cfg.DestinationRadius, speed, Cfg.MaxDeliverySpeed,
             playerDistance, Cfg.DeliverPlayerDistance, tostring(isDriving(ped)))
     end
@@ -156,7 +156,7 @@ local function driveLoop(token)
             Delivery.SendAction('fail', { reason = problem })
             sleep = 2000
         elseif not state.deadline then
-            -- Si ripete finche il server non conferma con timerStarted.
+            -- Repeated until the server confirms with timerStarted.
             if isDriving(ped) then
                 Delivery.SendAction('seated')
                 sleep = 2000
@@ -202,7 +202,7 @@ Delivery.RegisterJob('wagon', {
         end)
     end,
 
-    -- Si scende prima di eliminare il carretto, altrimenti il giocatore cade dal nulla.
+    -- Get off before deleting the wagon, otherwise the player falls out of nowhere.
     Stop = function(outcome)
         local wagon = state and state.wagon
         state = nil

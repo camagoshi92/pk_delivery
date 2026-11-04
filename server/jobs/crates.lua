@@ -1,8 +1,8 @@
--- Lavoro 2: tutte le casse partono da un unico punto; il server conta quelle rimaste.
+-- Job 2: all crates start from a single point; the server counts the ones left.
 local Cfg = Config.Crates
 local Security = Config.Security
 
--- La cassa in mano torna al punto di ritiro oppure fa fallire il lavoro, come da config.
+-- The crate in hand goes back to the pickup point or fails the job, as configured.
 local function loseCarriedCrate(session)
     if not session.carrying then return end
 
@@ -19,7 +19,7 @@ end
 Delivery.RegisterJob('crates', {
     Start = function(session)
         if Cfg.Count <= 0 then
-            Delivery.Error('Config.Crates.Count deve essere maggiore di zero.')
+            Delivery.Error('Config.Crates.Count must be greater than zero.')
             return nil
         end
 
@@ -35,7 +35,7 @@ Delivery.RegisterJob('crates', {
             if session.carrying or session.remaining <= 0 then return end
 
             if not Delivery.IsNear(session.src, session.place.PickupPoint, Cfg.InteractDistance) then
-                Delivery.Suspect(session, 'cassa presa da lontano')
+                Delivery.Suspect(session, 'crate picked up from too far')
                 return
             end
 
@@ -54,13 +54,13 @@ Delivery.RegisterJob('crates', {
             local minimumMs = walked / Security.MaxCarrySpeed * 1000
 
             if Delivery.ElapsedMs(session.carryStartedAt) < minimumMs then
-                Delivery.Suspect(session, 'cassa consegnata troppo in fretta')
+                Delivery.Suspect(session, 'crate delivered too fast')
                 loseCarriedCrate(session)
                 return
             end
 
             if not Delivery.IsNear(session.src, deliveryPoint, Cfg.DeliveryRadius) then
-                Delivery.Suspect(session, 'consegna lontano dal negozio')
+                Delivery.Suspect(session, 'delivery far from the store')
                 loseCarriedCrate(session)
                 return
             end
@@ -78,6 +78,6 @@ Delivery.RegisterJob('crates', {
         dropped = loseCarriedCrate,
     },
 
-    -- Da morto si perde solo la cassa: dopo il respawn il lavoro puo continuare.
+    -- Dying only loses the crate: after respawn the job can go on.
     OnDeath = loseCarriedCrate,
 })

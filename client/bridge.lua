@@ -1,10 +1,10 @@
--- Unico punto del lato client che conosce il framework.
+-- The only client-side place that knows the framework.
 --
--- Interfaccia comune:
---   Bridge.IsLoaded()            -> boolean, personaggio caricato
---   Bridge.OnLoaded(callback)    -> personaggio caricato
---   Bridge.OnDeath(callback)     -> giocatore morto
---   Bridge.OnRespawn(callback)   -> giocatore rientrato in gioco
+-- Common interface:
+--   Bridge.IsLoaded()            -> boolean, character loaded
+--   Bridge.OnLoaded(callback)    -> character loaded
+--   Bridge.OnDeath(callback)     -> player died
+--   Bridge.OnRespawn(callback)   -> player back in game
 Bridge = {}
 
 local loaded = false
@@ -26,7 +26,7 @@ local function fire(callbacks)
     end
 end
 
--- RSG e TZP non hanno qui un evento di morte verificato: si osserva il ped. Vale per ogni framework.
+-- RSG and TZP have no verified death event here: the ped is watched instead. Applies to every framework.
 local function watchDeath()
     CreateThread(function()
         local wasDead = false
@@ -44,20 +44,20 @@ local function watchDeath()
 end
 
 local Frameworks = {
-    -- Verificati su vorp_core/client e vorp_core/server/class/user.lua.
+    -- Verified against vorp_core/client and vorp_core/server/class/user.lua.
     vorp = function()
         RegisterNetEvent('vorp:SelectedCharacter', setLoaded)
         RegisterNetEvent('vorp_core:Client:OnPlayerDeath', function() fire(deathCallbacks) end)
         RegisterNetEvent('vorp_core:Client:OnPlayerRespawn', function() fire(respawnCallbacks) end)
     end,
 
-    -- Evento visto in world_pickups e tp_libs. DA VERIFICARE: rsg-core non e su questo server.
+    -- Event used by rsg-core. Tested in game on RSG.
     rsg = function()
         RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', setLoaded)
         watchDeath()
     end,
 
-    -- Evento visto in tp_libs e tpz_stables. DA VERIFICARE: tpz_core non e su questo server.
+    -- Event taken from tp_libs and tpz_stables. Not tested in game on TPZ yet.
     tzp = function()
         RegisterNetEvent('tpz_core:isPlayerReady', setLoaded)
         watchDeath()
@@ -86,10 +86,10 @@ if framework and Frameworks[framework] then
     Frameworks[framework]()
     Bridge.Name = framework
 else
-    Delivery.Error('framework non trovato: i lavori restano disattivati.')
+    Delivery.Error('framework not found: jobs stay disabled.')
 end
 
--- Dopo un riavvio della risorsa gli eventi di caricamento non arrivano piu: lo chiede al server.
+-- After a resource restart the load events never arrive again: ask the server.
 RegisterNetEvent('pk_delivery:client:characterState', function(isLoaded)
     if isLoaded then setLoaded() end
 end)

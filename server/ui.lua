@@ -1,4 +1,4 @@
--- Unico punto del lato server che chiama pk_library.
+-- The only server-side place that calls pk_library.
 UI = {}
 
 function UI.Notify(src, notificationType, message, title)

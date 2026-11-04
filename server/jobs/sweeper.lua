@@ -1,4 +1,4 @@
--- Lavoro 1: il server estrae i punti e valida ogni pulizia.
+-- Job 1: the server draws the points and validates every cleaning.
 local Cfg = Config.Sweeper
 local Security = Config.Security
 
@@ -27,7 +27,7 @@ Delivery.RegisterJob('sweeper', {
     Start = function(session)
         local points = Delivery.PickRandom(session.place.Points, Cfg.PointsPerJob)
         if #points == 0 then
-            Delivery.Error('spazzino, citta %s: Points e vuota.', session.location)
+            Delivery.Error('sweeper, town %s: Points is empty.', session.location)
             return nil
         end
 
@@ -48,7 +48,7 @@ Delivery.RegisterJob('sweeper', {
             if not point then return end
 
             if not Delivery.IsNear(session.src, point, Cfg.InteractDistance) then
-                Delivery.Suspect(session, 'pulizia lontano dal punto %d', session.index)
+                Delivery.Suspect(session, 'cleaning far from point %d', session.index)
                 return
             end
 
@@ -68,12 +68,12 @@ Delivery.RegisterJob('sweeper', {
             session.workStartedAt = nil
 
             if Delivery.ElapsedMs(startedAt) < Cfg.WorkDuration * 1000 * Security.MinWorkRatio then
-                Delivery.Suspect(session, 'pulizia troppo veloce')
+                Delivery.Suspect(session, 'cleaning too fast')
                 return
             end
 
             if not Delivery.IsNear(session.src, point, Cfg.InteractDistance) then
-                Delivery.Suspect(session, 'fine pulizia lontano dal punto %d', session.index)
+                Delivery.Suspect(session, 'cleaning finished far from point %d', session.index)
                 return
             end
 
