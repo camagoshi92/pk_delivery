@@ -6,7 +6,7 @@ lua54 'yes'
 name 'pk_delivery'
 author 'Poker Studio'
 description 'City jobs: street sweeper, general store crate delivery, wagon supply run'
-version '1.0.1'
+version '1.0.2'
 
 dependencies {
     'pk_library',

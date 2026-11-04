@@ -127,17 +127,22 @@ Config.Sweeper = {
     WorkDuration = 12,         -- seconds per point
 
     Work = {
-        Mode = 'scenario',     -- 'scenario' | 'prop'
-        Scenario = 'WORLD_HUMAN_BROOM',
-        -- Mode = 'prop': broom in hand + animation. Dict and Name must be picked in game.
+        -- 'prop': continuous sweeping loop (recommended).
+        -- 'scenario': native game scenario, but it takes random breaks leaning on the broom.
+        Mode = 'prop',
+        Scenario = 'WORLD_HUMAN_BROOM_WORKING',
         Prop = {
             Model = 'p_broom01x',
-            Bone = 'SKEL_R_Hand',
+            -- PH_R_Hand is where scenarios attach tools: zero offset = original grip.
+            Bone = 'PH_R_Hand',
             Offset = vector3(0.0, 0.0, 0.0),
             Rotation = vector3(0.0, 0.0, 0.0),
-            Dict = '',
-            Name = '',
-            Flags = 31,
+            -- Base loop of WORLD_HUMAN_BROOM_WORKING (sweeping only, no breaks).
+            Dict = 'amb_work@world_human_broom@working@male_a@base',
+            DictFemale = 'amb_work@world_human_broom@working@female_a@base',
+            Name = 'base',
+            PropAnim = 'base_broom', -- broom animation synced with the body
+            Flags = 1,               -- loop
         },
     },
 

@@ -141,6 +141,61 @@ function Delivery.StartScenario(ped, scenario)
     TaskStartScenarioInPlace(ped, joaat(scenario), -1, true, false, false, false)
 end
 
+-- Player scenario: holsters the weapon, clears tasks and retries until
+-- the scenario actually starts (otherwise the ped just stands still).
+function Delivery.StartPlayerScenario(ped, scenario, heading)
+    local hash = joaat(scenario)
+    SetCurrentPedWeapon(ped, joaat('WEAPON_UNARMED'), true, 0, false, false)
+    ClearPedTasks(ped, true, false)
+    Wait(100)
+
+    for _ = 1, 3 do
+        -- TASK_START_SCENARIO_IN_PLACE_HASH
+        Citizen.InvokeNative(0x524B54361229154F, ped, hash, -1, true, 0, (heading or -1.0) + 0.0, false)
+        local timeoutAt = GetGameTimer() + 1500
+        while GetGameTimer() < timeoutAt do
+            -- IS_PED_USING_ANY_SCENARIO
+            if Citizen.InvokeNative(0x57AB4A3080F85143, ped) then
+                return true
+            end
+            Wait(50)
+        end
+        ClearPedTasksImmediately(ped, true, true)
+        Wait(100)
+    end
+    return false
+end
+
+-- Objects near (or attached to) the ped: used to find the broom the
+-- scenario spawns by itself, which would otherwise stay on the ground.
+function Delivery.SnapshotNearbyObjects(ped, radius)
+    local seen = {}
+    local origin = GetEntityCoords(ped)
+    for _, object in ipairs(GetGamePool('CObject')) do
+        if IsEntityAttachedToEntity(object, ped) or #(GetEntityCoords(object) - origin) <= radius then
+            seen[object] = true
+        end
+    end
+    return seen
+end
+
+-- Deletes objects that appeared near the ped after the snapshot.
+function Delivery.DeleteNewNearbyObjects(ped, radius, before)
+    local origin = GetEntityCoords(ped)
+    for _, object in ipairs(GetGamePool('CObject')) do
+        if not before[object] then
+            local attachedToMe = IsEntityAttachedToEntity(object, ped)
+            local looseNearby = not IsEntityAttached(object) and #(GetEntityCoords(object) - origin) <= radius
+            if attachedToMe or looseNearby then
+                if attachedToMe then
+                    DetachEntity(object, true, false)
+                end
+                Delivery.DeleteEntity(object)
+            end
+        end
+    end
+end
+
 function Delivery.TrackEntity(entity)
     jobEntities[entity] = true
     return entity

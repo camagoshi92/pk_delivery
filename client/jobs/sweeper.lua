@@ -26,13 +26,19 @@ local function refreshBlips()
     end
 end
 
-local function startWorkAnimation(ped)
+local PROP_CLEAN_RADIUS = 3.0
+
+local function startWorkAnimation(ped, heading)
     if Cfg.Work.Mode ~= 'prop' then
-        Delivery.StartScenario(ped, Cfg.Work.Scenario)
+        state.objectsBefore = Delivery.SnapshotNearbyObjects(ped, PROP_CLEAN_RADIUS)
+        Delivery.StartPlayerScenario(ped, Cfg.Work.Scenario, heading)
         return
     end
 
     local prop = Cfg.Work.Prop
+    SetCurrentPedWeapon(ped, joaat('WEAPON_UNARMED'), true, 0, false, false)
+    ClearPedTasks(ped, true, false)
+
     local hash = Delivery.LoadModel(prop.Model)
     if hash then
         local coords = GetEntityCoords(ped)
@@ -41,33 +47,82 @@ local function startWorkAnimation(ped)
         Delivery.AttachToPed(state.broom, ped, prop)
     end
 
-    if Delivery.LoadAnim(prop.Dict) then
-        Delivery.PlayAnim(ped, { Dict = prop.Dict, Name = prop.Name, Flags = prop.Flags })
+    local dict = (not IsPedMale(ped) and prop.DictFemale) or prop.Dict
+    if Delivery.LoadAnim(dict) then
+        state.anim = { Dict = dict, Name = prop.Name, Flags = prop.Flags }
+        Delivery.PlayAnim(ped, state.anim)
+        if state.broom and prop.PropAnim then
+            -- PLAY_ENTITY_ANIM: the broom follows the body movement
+            Citizen.InvokeNative(0xDC6D22FAB76D4874, state.broom, prop.PropAnim, dict, 1000.0, true, true, false, 0.0, 0)
+        end
     end
 end
 
-local function stopWorkAnimation(ped)
-    ClearPedTasks(ped)
+-- Restarts the loop if something interrupts it (bump, light ragdoll).
+local function keepPropAnim(ped)
+    local anim = state and state.anim
+    if anim and not IsEntityPlayingAnim(ped, anim.Dict, anim.Name, 3) then
+        Delivery.PlayAnim(ped, anim)
+    end
+end
+
+local function stopWorkAnimation(ped, objectsBefore)
+    if state then state.anim = nil end
     if state and state.broom then
+        DetachEntity(state.broom, true, false)
         Delivery.DeleteEntity(state.broom)
         state.broom = nil
     end
+
+    if not objectsBefore then
+        ClearPedTasks(ped)
+        return
+    end
+
+    -- The scenario's own broom: removed before leaving the animation, then
+    -- swept again for any broom dropped during the exit.
+    Delivery.DeleteNewNearbyObjects(ped, PROP_CLEAN_RADIUS, objectsBefore)
+    ClearPedTasksImmediately(ped, true, true)
+    Wait(300)
+    Delivery.DeleteNewNearbyObjects(ped, PROP_CLEAN_RADIUS, objectsBefore)
+    Wait(700)
+    Delivery.DeleteNewNearbyObjects(ped, PROP_CLEAN_RADIUS, objectsBefore)
 end
 
+-- The "working" scenario drifts a little while sweeping: wider tolerance.
+local SCENARIO_WORK_DRIFT = 6.0
+
 -- While the bar runs: the interrupt key, moving away or dying stop it.
-local function watchInterrupt(token, ped, isDone)
+-- In scenario mode, restarts the animation if it ends on its own.
+local function watchInterrupt(token, ped, isDone, heading)
     CreateThread(function()
         local startCoords = GetEntityCoords(ped)
+        local scenarioMode = Cfg.Work.Mode ~= 'prop'
+        local maxDrift = scenarioMode and SCENARIO_WORK_DRIFT or MAX_WORK_DRIFT
+        local nextCheckAt = GetGameTimer() + 1000
+
         while not isDone() do
             InterruptPrompt.Show()
             local interrupted = InterruptPrompt.Pressed()
                 or IsEntityDead(ped)
                 or not Delivery.IsActive(token)
-                or #(GetEntityCoords(ped) - startCoords) > MAX_WORK_DRIFT
+                or #(GetEntityCoords(ped) - startCoords) > maxDrift
 
             if interrupted then
                 UI.CancelProgress()
                 return
+            end
+
+            if not scenarioMode and GetGameTimer() >= nextCheckAt then
+                nextCheckAt = GetGameTimer() + 500
+                keepPropAnim(ped)
+            elseif scenarioMode and GetGameTimer() >= nextCheckAt then
+                nextCheckAt = GetGameTimer() + 500
+                -- IS_PED_USING_ANY_SCENARIO
+                if not Citizen.InvokeNative(0x57AB4A3080F85143, ped) then
+                    Citizen.InvokeNative(0x524B54361229154F, ped, joaat(Cfg.Work.Scenario), -1, false, 0, heading + 0.0, false)
+                    nextCheckAt = GetGameTimer() + 1500
+                end
             end
             Wait(0)
         end
@@ -80,14 +135,16 @@ local function doWork(token, index)
 
     state.working = true
     SetEntityHeading(ped, point.h)
-    startWorkAnimation(ped)
+    startWorkAnimation(ped, point.h)
+    local objectsBefore = state and state.objectsBefore
+    if state then state.objectsBefore = nil end
 
     local done = false
-    watchInterrupt(token, ped, function() return done end)
+    watchInterrupt(token, ped, function() return done end, point.h or GetEntityHeading(ped))
     local completed = UI.Progress(Texts.Progress, Cfg.WorkDuration)
     done = true
 
-    stopWorkAnimation(ped)
+    stopWorkAnimation(ped, objectsBefore)
     if not Delivery.IsActive(token) then return end
 
     state.working = false
